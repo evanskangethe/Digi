@@ -4,11 +4,10 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.cassandra.SessionFactory;
-import org.springframework.data.cassandra.config.AbstractReactiveCassandraConfiguration;
-import org.springframework.data.cassandra.config.CqlSessionFactoryBean;
-import org.springframework.data.cassandra.config.SchemaAction;
-import org.springframework.data.cassandra.config.SessionFactoryFactoryBean;
+import org.springframework.data.cassandra.config.*;
 import org.springframework.data.cassandra.core.CassandraOperations;
 import org.springframework.data.cassandra.core.CassandraTemplate;
 import org.springframework.data.cassandra.core.convert.CassandraConverter;
@@ -19,10 +18,19 @@ import org.springframework.data.cassandra.repository.config.EnableCassandraRepos
 
 @Configuration
 @EnableCassandraRepositories(basePackages = "com.example.digifarm.repository")
-public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
+public class CassandraConfig extends AbstractCassandraConfiguration {
 
     @Value("${spring.data.cassandra.keyspace-name}")
     private String KEYSPACE;
+
+    public String getContactPoints() {
+        return "localhost";
+    }
+
+    @Override
+    protected String getKeyspaceName() {
+        return KEYSPACE;
+    }
 
     @Bean
     public CqlSessionFactoryBean session() {
@@ -32,15 +40,6 @@ public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
         session.setKeyspaceName(getKeyspaceName());
 
         return session;
-    }
-
-    public String getContactPoints() {
-        return "127.0.0.1";
-    }
-
-    @Override
-    protected String getKeyspaceName() {
-        return KEYSPACE;
     }
 
     @Bean
@@ -72,4 +71,5 @@ public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
     public CassandraOperations cassandraTemplate(SessionFactory sessionFactory, CassandraConverter converter) {
         return new CassandraTemplate(sessionFactory, converter);
     }
+
 }

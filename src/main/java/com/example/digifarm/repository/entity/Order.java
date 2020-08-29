@@ -6,18 +6,19 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Table(value = "MERCHANT")
+@Table(value = "ORDER")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Order {
+
     @PrimaryKey
     private UUID merchantId= UUID.randomUUID();
-    private String username;
-    private String password;
-    private String role;
+    private UUID userId;
+    private String produceIds;
     private LocalDate creationDate= LocalDate.now();
 }
