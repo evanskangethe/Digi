@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface UserRepository extends CassandraRepository<User, UUID> {
     @AllowFiltering
     User findByUsername(String username);
+    @AllowFiltering
+    User findUserByUsername(String username);
 }
