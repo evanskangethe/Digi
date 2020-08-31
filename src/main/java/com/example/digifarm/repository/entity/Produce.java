@@ -16,9 +16,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Produce {
     @PrimaryKey
-    private UUID prodiceId= UUID.randomUUID();
+    private UUID produceId= UUID.randomUUID();
     private String name;
-    private String descriprion;
+    private String description;
     private BigDecimal price;
     private UUID farmerId;
     private LocalDate creationDate= LocalDate.now();

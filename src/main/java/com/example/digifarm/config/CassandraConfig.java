@@ -1,15 +1,11 @@
 package com.example.digifarm.config;
 
-import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.driver.core.Cluster;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.cassandra.SessionFactory;
 import org.springframework.data.cassandra.config.*;
-import org.springframework.data.cassandra.core.CassandraOperations;
-import org.springframework.data.cassandra.core.CassandraTemplate;
 import org.springframework.data.cassandra.core.convert.CassandraConverter;
 import org.springframework.data.cassandra.core.convert.MappingCassandraConverter;
 import org.springframework.data.cassandra.core.mapping.CassandraMappingContext;
@@ -17,14 +13,30 @@ import org.springframework.data.cassandra.core.mapping.SimpleUserTypeResolver;
 import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
 
 @Configuration
-@EnableCassandraRepositories(basePackages = "com.example.digifarm.repository")
+@EnableCassandraRepositories(basePackages = "com.example.digifarm")
 public class CassandraConfig extends AbstractCassandraConfiguration {
 
     @Value("${spring.data.cassandra.keyspace-name}")
     private String KEYSPACE;
 
-    public String getContactPoints() {
-        return "localhost";
+    @Bean
+    @Override
+    public CassandraSessionFactoryBean session() {
+
+        Cluster cluster = Cluster.builder()
+                .withoutJMXReporting()
+                .addContactPoint("127.0.0.1")
+                .build();
+
+        CassandraSessionFactoryBean session = new CassandraSessionFactoryBean();
+
+        session.setCluster(cluster);
+        session.setConverter(cassandraConverter());
+        session.setKeyspaceName(getKeyspaceName());
+        session.setSchemaAction(getSchemaAction());
+        session.setStartupScripts(getStartupScripts());
+        session.setShutdownScripts(getShutdownScripts());
+        return session;
     }
 
     @Override
@@ -32,44 +44,20 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
         return KEYSPACE;
     }
 
-    @Bean
-    public CqlSessionFactoryBean session() {
-
-        CqlSessionFactoryBean session = new CqlSessionFactoryBean();
-        session.setContactPoints(getContactPoints());
-        session.setKeyspaceName(getKeyspaceName());
-
-        return session;
+    @Override
+    public CassandraClusterFactoryBean cluster() {
+        return super.cluster();
     }
 
-    @Bean
-    public SessionFactoryFactoryBean sessionFactory(CqlSession session, CassandraConverter converter) {
-
-        SessionFactoryFactoryBean sessionFactory = new SessionFactoryFactoryBean();
-        sessionFactory.setSession(session);
-        sessionFactory.setConverter(converter);
-        sessionFactory.setSchemaAction(SchemaAction.NONE);
-
-        return sessionFactory;
-    }
-
-    @Bean
-    public CassandraMappingContext mappingContext(CqlSession cqlSession) {
-
+    @Override
+    public CassandraMappingContext cassandraMapping() {
         CassandraMappingContext mappingContext = new CassandraMappingContext();
-        mappingContext.setUserTypeResolver(new SimpleUserTypeResolver(cqlSession));
-
+        mappingContext.setUserTypeResolver(new SimpleUserTypeResolver(cluster().getObject(), getKeyspaceName()));
         return mappingContext;
     }
 
     @Bean
-    public CassandraConverter converter(CassandraMappingContext mappingContext) {
-        return new MappingCassandraConverter(mappingContext);
+    public CassandraConverter converter() {
+        return new MappingCassandraConverter(cassandraMapping());
     }
-
-    @Bean
-    public CassandraOperations cassandraTemplate(SessionFactory sessionFactory, CassandraConverter converter) {
-        return new CassandraTemplate(sessionFactory, converter);
-    }
-
 }
